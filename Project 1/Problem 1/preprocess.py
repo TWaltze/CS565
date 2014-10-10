@@ -7,9 +7,6 @@
 import re
 import json
 
-#input_file = "features.txt"
-#output_file = "features_json.txt"
-
 def features(input_file = "features.txt", output_file = "features_json.txt"):
 	processed = {}
 	with open(input_file, "r") as raw:
@@ -46,9 +43,6 @@ def features(input_file = "features.txt", output_file = "features_json.txt"):
 
 			# Add to list of authors
 			processed[author] = terms
-
-	# parsed = json.loads(processed)
-	# print(json.dumps(processed, indent=4, sort_keys=True))
 
 	# Encode as json for writing to new file
 	encoded = json.dumps(processed)
