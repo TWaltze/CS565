@@ -54,13 +54,6 @@ def compareAuthors(author1, author2, authors = None):
 			# of terms.
 			total += 1
 
-	'''
-	print("Author 1 terms: {}".format(len(author1)))
-	print("Author 2 terms: {}\n".format(len(author2)))
-
-	print("Shared terms: {} ({}%)".format(len(shared), (len(shared) / total * 100)))
-	'''
-
 	return {
 		"author1": len(author1),
 		"author2": len(author2),
@@ -80,7 +73,6 @@ def analyzeEdge(edge_id, edges = None, authors = None):
 def analyzeEdges():
 	edges = loadEdges()
 	authors = loadAuthors()
-	# coauthors = loadTraining()
 
 	prediction = {}
 	correct = 0
@@ -101,18 +93,6 @@ def analyzeEdges():
 				coauthored = 0
 
 			prediction[edge] = coauthored
-
-			# Compare prediction to training
-			# file with correct answer
-			'''
-			if edges[edge] == coauthored:
-				correct += 1
-			else:
-				incorrect += 1
-			'''
-
-		# print("Correct: {}".format(correct))
-		# print("Incorrect: {}".format(incorrect))
 
 	return prediction
 
