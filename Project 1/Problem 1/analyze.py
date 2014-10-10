@@ -92,7 +92,7 @@ def analyzeEdges():
 
 			# Basic prediction.
 			# If authors share more than
-			# 10% of the total terms between
+			# 4% of the total terms between
 			# them, they are coauthors
 			if data["shared"] >= 4:
 				coauthored = 1
