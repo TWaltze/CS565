@@ -70,6 +70,7 @@ def edges(input_file = "edge_names.csv", output_file = "edge_names_json.txt"):
 	with open(output_file, "w") as output:
 		output.write(encoded)
 
+
 def train(input_file = "train.csv", output_file = "train_json.txt"):
 	processed = {}
 	with open(input_file, "r") as raw:

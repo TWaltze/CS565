@@ -29,41 +29,122 @@ def generatePrediction(output_file = "prediction.csv"):
 		for prediction in predictions:
 			output.write("{},{}\n".format(prediction, predictions[prediction]))
 
-def compareUsers(user1, user2, users = None):
+# Return an array with every user listing
+# who they are friends with.
+def generateFriendships():
+	edges = loadEdges()
+	users = loadUsers()
+	friendships = loadTraining()
+
+	userRelationships = {}
+	for friendship in friendships:
+		if friendships[friendship] == 1:
+			user1, user2 = edges[friendship]
+
+			# print("Edge {} between {} and {} is {}".format(friendship, user1, user2, friendships[friendship]))
+
+			if user1 not in userRelationships: userRelationships[user1] = []
+			if user2 not in userRelationships: userRelationships[user2] = []
+
+			userRelationships[user1].append(user2)
+			userRelationships[user2].append(user1)
+
+	# print(json.dumps(userRelationships, indent=4, sort_keys=True))
+	return userRelationships
+
+# Compare two users' groups and known friends
+def compareUsers(user1, user2, users = None, friendships = None):
 	if users == None:
 		users = loadUsers()
 
-	user1 = users[user1]
-	user2 = users[user2]
+	if friendships == None:
+		friendships = generateFriendships()
 
-	shared = []
-	total = 0
+	groups = compareUsersGroups(user1, user2, users)
+	friendships = compareUsersFriendships(user1, user2, friendships)
 
-	for key in user1:
-		# Keep count of total terms found
-		total += 1
-
-		if key in user2:
-			if key not in shared:
-				shared.append(key)
-
-	for key in user2:
-		if key in user1:
-			if key not in shared:
-				shared.append(key)
-		else:
-			# If a new term that isn't in author1
-			# is found, increase the total count
-			# of terms.
-			total += 1
-
-	return {
-		"user1": len(user1),
-		"user2": len(user2),
-		"shared": len(shared) / total * 100 if (total > 0) else 0
+	comparision = {
+		"groups": groups,
+		"friendships": friendships
 	}
 
-def analyzeEdge(edge_id, edges = None, users = None):
+	# print(json.dumps(comparision, indent=4, sort_keys=True))
+	return comparision
+
+def compareUsersGroups(user1, user2, users = None):
+	if users == None:
+		users = loadUsers()
+
+	user1_groups = users[user1]
+	user2_groups = users[user2]
+
+	shared = []
+	not_shared = []
+
+	for key in user1_groups:
+		if key in user2_groups:
+			shared.append(key)
+		else:
+			not_shared.append(key)
+
+	for key in user2_groups:
+		if key not in user1_groups:
+			not_shared.append(key)
+
+	# Total number of groups between
+	# the two users
+	total = len(shared) + len(not_shared)
+
+	return {
+		"shared": {
+			"list": shared,
+			"total": len(shared) / total * 100 if total > 0 else 0
+		},
+		"not_shared": {
+			"list": not_shared,
+			"total": len(not_shared) / total * 100 if total > 0 else 0
+		}
+	}
+
+def compareUsersFriendships(user1, user2, friendships = None):
+	if friendships == None:
+		friendships = generateFriendships()
+
+	user1_friendships = []
+	user2_friendships = []
+
+	if user1 in friendships: user1_friendships = friendships[user1]
+	if user2 in friendships: user2_friendships = friendships[user2]
+
+	shared = []
+	not_shared = []
+
+	for key in user1_friendships:
+		if key in user2_friendships:
+			shared.append(key)
+		else:
+			not_shared.append(key)
+
+	for key in user2_friendships:
+		if key not in user1_friendships:
+			not_shared.append(key)
+
+	# Total number of groups between
+	# the two users
+	total = len(shared) + len(not_shared)
+
+	return {
+		"shared": {
+			"list": shared,
+			"total": len(shared) / total * 100 if total > 0 else 0
+		},
+		"not_shared": {
+			"list": not_shared,
+			"total": len(not_shared) / total * 100 if total > 0 else 0
+		}
+	}
+
+def analyzeEdge(edge_id, edges = None, users = None, friendships = None):
 	if edges == None:
 		edges = loadEdges()
 
@@ -71,11 +152,12 @@ def analyzeEdge(edge_id, edges = None, users = None):
 	user1 = edge[0]
 	user2 = edge[1]
 
-	return compareUsers(user1, user2, users)
+	return compareUsers(user1, user2, users, friendships)
 
 def analyzeEdges():
 	edges = loadEdges()
 	users = loadUsers()
+	friendships = generateFriendships()
 
 	prediction = {}
 	correct = 0
@@ -84,7 +166,7 @@ def analyzeEdges():
 		# Don't try to predict the first 5000 edges.
 		# We were given them already to test against.
 		if int(edge) > 5000:
-			data = analyzeEdge(edge, edges, authors)
+			data = analyzeEdge(edge, edges, users, friendships)
 
 			# Basic prediction.
 			# If authors share more than
@@ -102,19 +184,35 @@ def analyzeEdges():
 def analyzeTest():
 	edges = loadEdges()
 	users = loadUsers()
-	friendships = loadTraining()
+	training = loadTraining()
+	friendships = generateFriendships()
+
+	# Input to step through and test.
+	#
+	# Generally will be either:
+	#	training = edges from train with known values
+	#	edges = all edges between users
+	objects_to_step_through = training
 
 	prediction = {}
+	groupless = {}
 	correct = 0
 	incorrect = 0
-	for edge in friendships:
-		data = analyzeEdge(edge, edges, users)
+	guessed_as_friends = 0
+	for edge in objects_to_step_through:
+		data = analyzeEdge(edge, edges, users, friendships)
 
 		# Basic prediction.
 		# If users are members of more than
-		# 10% of the total groups between
-		# them, they are friends
-		if data["shared"] >= 10:
+		# 15% of the total groups between
+		# them, they are friends.
+		#
+		# OR
+		#
+		# Users are known friends with more
+		# than 0% of the same people, they
+		# are friends.
+		if data["groups"]["shared"]["total"] >= 15 or data["friendships"]["shared"]["total"] > 0:
 			friendship = 1
 		else:
 			friendship = 0
@@ -123,12 +221,64 @@ def analyzeTest():
 
 		# Compare prediction to training
 		# file with correct answer
-		if friendships[edge] == friendship:
+		if edge in training and training[edge] == friendship:
 			correct += 1
 		else:
 			incorrect += 1
 
+			if friendship == 1:
+				guessed_as_friends += 1
+
 	print("Correct: {}".format(correct))
 	print("Incorrect: {}".format(incorrect))
+	print("Incorrectly guessed as friends: {}".format(guessed_as_friends))
+	print("Incorrectly guessed as not friends: {}".format(incorrect - guessed_as_friends))
 
 	# return prediction
+
+def analyzeFriendships():
+	edges = loadEdges()
+	users = loadUsers()
+	friendships = loadTraining()
+
+	count = 0
+	groupless = {}
+	grouped = {}
+	for edge in friendships:
+		# Edge represents a friendship
+		if friendships[edge] == 1:
+			# Keep a running total of how
+			# many friendships exist
+			count += 1
+
+			# Get users of a friendship
+			user1, user2 = edges[edge]
+
+			user1_data = users[user1]
+			user2_data = users[user2]
+
+			if len(user1_data) == 0:
+				if user1 in groupless:
+					groupless[user1] += 1
+				else:
+					groupless[user1] = 1
+			else:
+				if user1 in grouped:
+					grouped[user1] += 1
+				else:
+					grouped[user1] = 1
+
+			if len(user2_data) == 0:
+				if user2 in groupless:
+					groupless[user2] += 1
+				else:
+					groupless[user2] = 1
+			else:
+				if user2 in grouped:
+					grouped[user2] += 1
+				else:
+					grouped[user2] = 1
+
+	print("Total friendships: {}\nTotal Groupless: {}".format(count, len(groupless)))
+	return (grouped, groupless)
+
