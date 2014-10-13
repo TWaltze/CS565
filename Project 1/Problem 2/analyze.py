@@ -172,7 +172,8 @@ def analyzeEdges():
 			# If users are members of more than
 			# 15% of the total groups between
 			# them, they are friends.
-			if data["groups"]["not_shared"]["total"] >= 20:
+			if (data["groups"]["user1_group_total"] > 0 and data["groups"]["user2_group_total"] == 0) or \
+			(data["groups"]["user1_group_total"] == 0 and data["groups"]["user2_group_total"] > 0):
 				friendship = 1
 			else:
 				friendship = 0
@@ -199,6 +200,8 @@ def analyzeTest():
 	correct = 0
 	incorrect = 0
 	guessed_as_friends = 0
+	correct_data = []
+	incorrect_data = []
 	for edge in objects_to_step_through:
 		data = analyzeEdge(edge, edges, users, friendships)
 
@@ -212,7 +215,8 @@ def analyzeTest():
 		# Users are known friends with more
 		# than 0% of the same people, they
 		# are friends.
-		if (data["groups"]["user1_group_total"] > 0 or data["groups"]["user2_group_total"] > 0):
+		if (data["groups"]["user1_group_total"] > 0 and data["groups"]["user2_group_total"] == 0) or \
+			(data["groups"]["user1_group_total"] == 0 and data["groups"]["user2_group_total"] > 0):
 			friendship = 1
 		else:
 			friendship = 0
@@ -236,6 +240,8 @@ def analyzeTest():
 			print("User1: {}\tUser2: {}".format(data["groups"]["user1_group_total"], data["groups"]["user2_group_total"]))
 			'''
 
+			correct_data.append([data["groups"]["user1_group_total"], data["groups"]["user2_group_total"], 1])
+
 			correct += 1
 		else:
 			'''
@@ -245,6 +251,9 @@ def analyzeTest():
 				data["groups"]["user2_group_total"] = tmp
 			print("User1: {}\tUser2: {}".format(data["groups"]["user1_group_total"], data["groups"]["user2_group_total"]))
 			'''
+
+			incorrect_data.append([data["groups"]["user1_group_total"], data["groups"]["user2_group_total"], 0])
+
 			incorrect += 1
 
 			if friendship == 1:
@@ -256,6 +265,23 @@ def analyzeTest():
 	print("Incorrectly guessed as not friends: {}".format(incorrect - guessed_as_friends))
 
 	# return prediction
+	return {
+		"correct": correct_data,
+		"incorrect": incorrect_data
+	}
+
+def generateComparisionCSV(output_file = "comparision.csv"):
+	data = analyzeTest()
+
+	with open(output_file, "w") as output:
+		# Generate csv headers
+		output.write("user1,user2,friendship\n")
+
+		for pair in data["correct"]:
+			output.write("{},{},{}\n".format(pair[0], pair[1], pair[2]))
+
+		for pair in data["incorrect"]:
+			output.write("{},{},{}\n".format(pair[0], pair[1], pair[2]))
 
 def usersWhoShareFriends():
 	edges = loadEdges()
