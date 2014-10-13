@@ -103,7 +103,9 @@ def compareUsersGroups(user1, user2, users = None):
 		"not_shared": {
 			"list": not_shared,
 			"total": len(not_shared) / total * 100 if total > 0 else 0
-		}
+		},
+		"user1_group_total": len(user1_groups),
+		"user2_group_total": len(user2_groups)
 	}
 
 def compareUsersFriendships(user1, user2, friendships = None):
@@ -160,8 +162,6 @@ def analyzeEdges():
 	friendships = generateFriendships()
 
 	prediction = {}
-	correct = 0
-	incorrect = 0
 	for edge in edges:
 		# Don't try to predict the first 5000 edges.
 		# We were given them already to test against.
@@ -169,10 +169,10 @@ def analyzeEdges():
 			data = analyzeEdge(edge, edges, users, friendships)
 
 			# Basic prediction.
-			# If authors share more than
-			# 4% of the total terms between
-			# them, they are coauthors
-			if data["shared"] >= 4:
+			# If users are members of more than
+			# 15% of the total groups between
+			# them, they are friends.
+			if data["groups"]["not_shared"]["total"] >= 20:
 				friendship = 1
 			else:
 				friendship = 0
@@ -212,7 +212,11 @@ def analyzeTest():
 		# Users are known friends with more
 		# than 0% of the same people, they
 		# are friends.
-		if data["groups"]["shared"]["total"] >= 15 or data["friendships"]["shared"]["total"] > 0:
+		if data["groups"]["not_shared"]["total"] > 0 and data["groups"]["not_shared"]["total"] <= 100:
+			u1, u2 = edges[str(edge)]
+			 # print("Users {} and {} have abnormal sharing at {}%".format(u1, u2, data["groups"]["not_shared"]["total"]))
+
+		if data["groups"]["not_shared"]["total"] >= 15:
 			friendship = 1
 		else:
 			friendship = 0
@@ -235,6 +239,20 @@ def analyzeTest():
 	print("Incorrectly guessed as not friends: {}".format(incorrect - guessed_as_friends))
 
 	# return prediction
+
+def usersWhoShareFriends():
+	edges = loadEdges()
+	users = loadUsers()
+	training = loadTraining()
+	friendships = generateFriendships()
+
+	for edge in edges:
+		user1 = edges[edge][0]
+		user2 = edges[edge][1]
+
+		comparision = compareUsersFriendships(user1, user2, friendships)
+
+		if len(comparision["shared"]) > 0: print("Users {} and {} share a friend.".format(user1, user2))
 
 def analyzeFriendships():
 	edges = loadEdges()
@@ -280,5 +298,51 @@ def analyzeFriendships():
 					grouped[user2] = 1
 
 	print("Total friendships: {}\nTotal Groupless: {}".format(count, len(groupless)))
+	return (grouped, groupless)
+
+def analyzeNonFriendships():
+	edges = loadEdges()
+	users = loadUsers()
+	friendships = loadTraining()
+
+	count = 0
+	groupless = {}
+	grouped = {}
+	for edge in friendships:
+		# Edge represents a non-friendship
+		if friendships[edge] == 0:
+			# Keep a running total of how
+			# many non-friendships exist
+			count += 1
+
+			# Get users of a non-friendship
+			user1, user2 = edges[edge]
+
+			user1_data = users[user1]
+			user2_data = users[user2]
+
+			if len(user1_data) == 0:
+				if user1 in groupless:
+					groupless[user1] += 1
+				else:
+					groupless[user1] = 1
+			else:
+				if user1 in grouped:
+					grouped[user1] += 1
+				else:
+					grouped[user1] = 1
+
+			if len(user2_data) == 0:
+				if user2 in groupless:
+					groupless[user2] += 1
+				else:
+					groupless[user2] = 1
+			else:
+				if user2 in grouped:
+					grouped[user2] += 1
+				else:
+					grouped[user2] = 1
+
+	print("Total non-friendships: {}\nTotal Groupless: {}".format(count, len(groupless)))
 	return (grouped, groupless)
 
