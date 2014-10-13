@@ -212,22 +212,39 @@ def analyzeTest():
 		# Users are known friends with more
 		# than 0% of the same people, they
 		# are friends.
-		if data["groups"]["not_shared"]["total"] > 0 and data["groups"]["not_shared"]["total"] <= 100:
-			u1, u2 = edges[str(edge)]
-			 # print("Users {} and {} have abnormal sharing at {}%".format(u1, u2, data["groups"]["not_shared"]["total"]))
-
-		if data["groups"]["not_shared"]["total"] >= 15:
+		if (data["groups"]["user1_group_total"] > 0 or data["groups"]["user2_group_total"] > 0):
 			friendship = 1
 		else:
 			friendship = 0
 
 		prediction[edge] = friendship
 
+		'''
+		if data["groups"]["not_shared"]["total"] > 0 and data["groups"]["not_shared"]["total"] <= 100:
+			u1, u2 = edges[str(edge)]
+			print("Users {} and {} have abnormal sharing at {}%".format(u1, u2, data["groups"]["not_shared"]["total"]))
+		'''
+
 		# Compare prediction to training
 		# file with correct answer
 		if edge in training and training[edge] == friendship:
+			'''
+			tmp = data["groups"]["user1_group_total"]
+			if data["groups"]["user2_group_total"] == 0:
+				data["groups"]["user1_group_total"] = data["groups"]["user2_group_total"]
+				data["groups"]["user2_group_total"] = tmp
+			print("User1: {}\tUser2: {}".format(data["groups"]["user1_group_total"], data["groups"]["user2_group_total"]))
+			'''
+
 			correct += 1
 		else:
+			'''
+			tmp = data["groups"]["user1_group_total"]
+			if data["groups"]["user2_group_total"] == 0:
+				data["groups"]["user1_group_total"] = data["groups"]["user2_group_total"]
+				data["groups"]["user2_group_total"] = tmp
+			print("User1: {}\tUser2: {}".format(data["groups"]["user1_group_total"], data["groups"]["user2_group_total"]))
+			'''
 			incorrect += 1
 
 			if friendship == 1:
