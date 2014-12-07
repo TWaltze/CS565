@@ -7,16 +7,6 @@
 import json
 import time
 
-# from scikits.crab.models import MatrixPreferenceDataModel
-# from scikits.crab.metrics import pearson_correlation
-# from scikits.crab.similarities import UserSimilarity
-# from scikits.crab.recommenders.knn import UserBasedRecommender
-
-# import recsys.algorithm
-# from recsys.algorithm.factorize import SVD
-#
-# recsys.algorithm.VERBOSE = True
-
 MAX_RATING = 15
 MIN_RATING = 1
 
@@ -42,13 +32,11 @@ def loadUserIndex(input_file = "user-ratings.json"):
 
         return users
 
-# def loadData(input_file = "user-ratings.data"):
-#     svd = SVD()
-#     svd.load_data(filename=input_file,
-#             sep='\t',
-#             format={'col':0, 'row':1, 'value':2, 'ids': int})
-#
-#     return svd
+def loadMapping(input_file = "mapping.json"):
+    with open(input_file, "r") as encoded:
+        edges = json.loads(encoded.read())
+
+        return edges
 
 def compareUsers(u1, u2, users = None):
     # If user database isn't already loaded into memory,
@@ -82,21 +70,25 @@ def nearestNeighborTo(u1, users = None):
     if users == None:
         users = loadUserIndex()
 
-    startTime = startTimer()
+    # startTime = startTimer()
 
     best = max([
         (compareUsers(u1, user, users), user)
         for user in users if user != u1
     ])
 
-    endTimer(startTime, "to find nearest neighbor with list")
+    # endTimer(startTime, "to find nearest neighbor with list")
 
-    return best
+    return best # (similarity, nearestUser)
 
 def calculateNearestNeighbors(output_file = "nearestNeighbors.data"):
     users = loadUserIndex()
 
+    startTime = startTimer()
+
     nearest = [(user, nearestNeighborTo(user, users)) for user in users]
+
+    endTimer(startTime, "to find nearest neighbors")
 
     with open(output_file, "w") as output:
         for pair in nearest:
@@ -106,40 +98,53 @@ def calculateNearestNeighbors(output_file = "nearestNeighbors.data"):
 
             output.write("{},{},{}\n".format(user, neighbor, distance))
 
-# def predict(movie, user, data = None):
-#     # If database isn't already loaded into memory,
-#     # load it now.
-#     if data == None:
-#         data = loadData()
-#
-#     prediction = data.predict(movie, user, MIN_RATING, MAX_RATING)
-#
-#     return prediction
+def nearestNeighborFromSubsetTo(u1, subset, users = None):
+    # If user database isn't already loaded into memory,
+    # load it now.
+    if users == None:
+        users = loadUserIndex()
 
-# def recommendations(user, data = None):
-#     # If user database isn't already loaded into memory,
-#     # load it now.
-#     if data == None:
-#         data = loadUserIndex()
-#
-#     startTime = startTimer()
-#     model = MatrixPreferenceDataModel(data)
-#     endTimer(startTime, "for model")
-#
-#     startTime = startTimer()
-#     similarity = UserSimilarity(model, pearson_correlation)
-#     endTimer(startTime, "for similarity")
-#
-#     startTime = startTimer()
-#     recommender = UserBasedRecommender(model, similarity, with_preference=True)
-#     endTimer(startTime, "for recommender")
-#
-#     startTime = startTimer()
-#     recs = recommender.recommend(user)
-#     endTimer(startTime, "for recommendations")
-#
-#     return recs
+    # startTime = startTimer()
 
+    best = max([
+        (compareUsers(u1, user, users), user)
+        for user in subset if user != u1
+    ])
+
+    # endTimer(startTime, "to find nearest neighbor with list")
+
+    return best # (similarity, nearestUser)
+
+def calculateNearestNeighborsFromMapping(output_file = "nearestNeighborsSubset.data"):
+    users = loadUserIndex()
+    movies = loadMovieIndex()
+    edges = loadMapping()
+
+    startTime = startTimer()
+
+    nearest = {}
+    for edge in edges:
+        user, movie = edges[edge]
+
+        neighbor = nearestNeighborFromSubsetTo(user, movies[movie], users)[1]
+
+        data = {
+            user: neighbor
+        }
+
+        if movie in nearest:
+            nearest[movie].update(data)
+        else:
+            nearest[movie] = data
+
+    endTimer(startTime, "to find nearest neighbors")
+
+    # Encode as json for writing to new file
+    encoded = json.dumps(nearest)
+
+    # Write to new file
+    with open(output_file, "w") as output:
+        output.write(encoded)
 
 
 

@@ -130,3 +130,61 @@ def movieRatings(input_file = "train.csv", output_file = "movie-ratings.json"):
     # Write to new file
     with open(output_file, "w") as output:
         output.write(encoded)
+
+# Convert mapping to a more manageable data structure
+def mapping(input_file = "mapping.csv", output_file = "mapping.json"):
+    processed = {}
+    with open(input_file, "r") as raw:
+        # Skip first line, contains column names
+        next(raw)
+
+        for line in raw:
+            # Remove extra characters
+            clean = line.strip()
+
+            # Break string into column data
+            data = clean.split(",")
+            # First word is an edge id
+            edge_id = int(data.pop(0))
+            # Second is user
+            user = data.pop(0)
+            # Third is movie
+            movie = data.pop(0)
+
+            # Add to list of edges.
+            processed[edge_id] = [user, movie]
+
+    # Encode as json for writing to new file
+    encoded = json.dumps(processed)
+
+    # Write to new file
+    with open(output_file, "w") as output:
+        output.write(encoded)
+
+# Convert test to a more manageable data structure
+def test(input_file = "test.csv", output_file = "test.json"):
+    processed = {}
+    with open(input_file, "r") as raw:
+        # Skip first line, contains column names
+        next(raw)
+
+        for line in raw:
+            # Remove extra "," characters
+            clean = line.replace(",", "")
+            clean = clean.replace("  ", " ")
+            clean = clean.strip()
+
+            # Break string into column data
+            data = clean.split(" ")
+            # First word is an edge id
+            edge_id = int(data.pop(0))
+
+            # Add to list of edges.
+            processed[edge_id] = edge_id
+
+    # Encode as json for writing to new file
+    encoded = json.dumps(processed)
+
+    # Write to new file
+    with open(output_file, "w") as output:
+        output.write(encoded)
