@@ -5,11 +5,13 @@
 ####
 
 import json
+import recsys.algorithm
+from recsys.algorithm.factorize import SVD
 
-highestRating = 15
-lowestRating = 1
+recsys.algorithm.VERBOSE = True
 
-allUsers = loadUserIndex()
+MAX_RATING = 15
+MIN_RATING = 1
 
 def loadMovieIndex(input_file = "movie-ratings.json"):
     with open(input_file, "r") as encoded:
@@ -22,6 +24,14 @@ def loadUserIndex(input_file = "user-ratings.json"):
         users = json.loads(encoded.read())
 
         return users
+
+def loadData(input_file = "user-ratings.data"):
+    svd = SVD()
+    svd.load_data(filename=input_file,
+            sep='\t',
+            format={'col':0, 'row':1, 'value':2, 'ids': int})
+
+    return svd
 
 def compareUsers(u1, u2, users = None):
     # If user database isn't already loaded into memory,
@@ -44,7 +54,7 @@ def compareUsers(u1, u2, users = None):
     # The lower the number (0 to 1), the less similar.
     similarity = 1.0
 
-    base = highestRating * min(len(user1Movies), len(user2Movies))
+    base = MAX_RATING * min(len(user1Movies), len(user2Movies))
     normalize = similarity / base
 
     for movie in user1Movies:
@@ -86,5 +96,20 @@ def nearestNeighborTo(u1, users = None):
 
     return best
 
+def predict(movie, user, data = None):
+    # If database isn't already loaded into memory,
+    # load it now.
+    if data == None:
+        data = loadData()
+
+    prediction = data.predict(movie, user, MIN_RATING, MAX_RATING)
+
+    return prediction
+
+
+
+
+
+# exec(open("analyze.py").read())
 
 # eof

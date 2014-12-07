@@ -47,6 +47,42 @@ def userRatings(input_file = "train.csv", output_file = "user-ratings.json"):
     with open(output_file, "w") as output:
         output.write(encoded)
 
+# Index ratings by user
+def userRatingsAsCSV(input_file = "train.csv", output_file = "user-ratings.data"):
+    processed = ""
+    lineNumber = 0
+    with open(input_file, "r") as raw:
+        for line in raw:
+            lineNumber += 1
+            print("line {}".format(lineNumber))
+
+            # Remove ":" characters
+            clean = line.replace(":", "")
+            clean = clean.replace("  ", " ")
+
+            # Break string into ratings
+            ratings = clean.split(" ")
+
+            # First word is always user
+            user = ratings.pop(0).replace("U", "")
+
+            for rating in ratings:
+                # Remove ranking wrapper
+                stripped = rating.replace("(", "")
+                stripped = stripped.replace(")", "")
+
+                movie, score = stripped.split(",")
+
+                # Remove "M" indicator to just leave int id
+                movie = movie.replace("M", "")
+
+
+                processed += "{}\t{}\t{}".format(user, movie, score)
+
+    # Write to new file
+    with open(output_file, "w") as output:
+        output.write(processed)
+
 # Index ratings by movie
 def movieRatings(input_file = "train.csv", output_file = "movie-ratings.json"):
     processed = {}
