@@ -20,6 +20,12 @@ import time
 MAX_RATING = 15
 MIN_RATING = 1
 
+def startTimer():
+    return time.time()
+
+def endTimer(start, task):
+    print("--- {} seconds {} ---".format(time.time() - start, task))
+
 def loadMovieIndex(input_file = "movie-ratings.json"):
     with open(input_file, "r") as encoded:
         movies = json.loads(encoded.read())
@@ -27,18 +33,22 @@ def loadMovieIndex(input_file = "movie-ratings.json"):
         return movies
 
 def loadUserIndex(input_file = "user-ratings.json"):
+    startTime = startTimer()
+
     with open(input_file, "r") as encoded:
         users = json.loads(encoded.read())
 
+        endTimer(startTime, "to load from json")
+
         return users
 
-def loadData(input_file = "user-ratings.data"):
-    svd = SVD()
-    svd.load_data(filename=input_file,
-            sep='\t',
-            format={'col':0, 'row':1, 'value':2, 'ids': int})
-
-    return svd
+# def loadData(input_file = "user-ratings.data"):
+#     svd = SVD()
+#     svd.load_data(filename=input_file,
+#             sep='\t',
+#             format={'col':0, 'row':1, 'value':2, 'ids': int})
+#
+#     return svd
 
 def compareUsers(u1, u2, users = None):
     # If user database isn't already loaded into memory,
@@ -93,6 +103,8 @@ def nearestNeighborTo(u1, users = None):
     if users == None:
         users = loadUserIndex()
 
+    startTime = startTimer()
+
     best = ("U0", -1.0)
     for user in users:
         if user != u1:
@@ -100,6 +112,8 @@ def nearestNeighborTo(u1, users = None):
 
             if results["similarity"] > best[1]:
                 best = (user, results["similarity"])
+
+    endTimer(startTime, "to find nearest neighbor")
 
     return best
 
@@ -119,21 +133,21 @@ def nearestNeighborTo(u1, users = None):
 #     if data == None:
 #         data = loadUserIndex()
 #
-#     start_time = time.time()
+#     startTime = startTimer()
 #     model = MatrixPreferenceDataModel(data)
-#     print("--- {} seconds for model ---".format(time.time() - start_time))
+#     endTimer(startTime, "for model")
 #
-#     start_time = time.time()
+#     startTime = startTimer()
 #     similarity = UserSimilarity(model, pearson_correlation)
-#     print("--- {} seconds for similarity ---".format(time.time() - start_time))
+#     endTimer(startTime, "for similarity")
 #
-#     start_time = time.time()
+#     startTime = startTimer()
 #     recommender = UserBasedRecommender(model, similarity, with_preference=True)
-#     print("--- {} seconds for recommender ---".format(time.time() - start_time))
+#     endTimer(startTime, "for recommender")
 #
-#     start_time = time.time()
+#     startTime = startTimer()
 #     recs = recommender.recommend(user)
-#     print("--- {} seconds for recommendations ---".format(time.time() - start_time))
+#     endTimer(startTime, "for recommendations")
 #
 #     return recs
 
