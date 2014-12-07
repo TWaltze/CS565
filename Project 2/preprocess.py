@@ -77,7 +77,10 @@ def userRatingsAsCSV(input_file = "train.csv", output_file = "user-ratings.data"
                 movie = movie.replace("M", "")
 
 
-                processed += "{}\t{}\t{}".format(user, movie, score)
+                processed += "{}\t{}\t{}\n".format(user, movie, score)
+
+    # Fix for weird bug that adds an extra newline between users
+    processed = text = "\n".join([ll.rstrip() for ll in processed.splitlines() if ll.strip()])
 
     # Write to new file
     with open(output_file, "w") as output:

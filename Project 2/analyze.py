@@ -5,10 +5,17 @@
 ####
 
 import json
-import recsys.algorithm
-from recsys.algorithm.factorize import SVD
+import time
 
-recsys.algorithm.VERBOSE = True
+# from scikits.crab.models import MatrixPreferenceDataModel
+# from scikits.crab.metrics import pearson_correlation
+# from scikits.crab.similarities import UserSimilarity
+# from scikits.crab.recommenders.knn import UserBasedRecommender
+
+# import recsys.algorithm
+# from recsys.algorithm.factorize import SVD
+#
+# recsys.algorithm.VERBOSE = True
 
 MAX_RATING = 15
 MIN_RATING = 1
@@ -96,15 +103,39 @@ def nearestNeighborTo(u1, users = None):
 
     return best
 
-def predict(movie, user, data = None):
-    # If database isn't already loaded into memory,
-    # load it now.
-    if data == None:
-        data = loadData()
+# def predict(movie, user, data = None):
+#     # If database isn't already loaded into memory,
+#     # load it now.
+#     if data == None:
+#         data = loadData()
+#
+#     prediction = data.predict(movie, user, MIN_RATING, MAX_RATING)
+#
+#     return prediction
 
-    prediction = data.predict(movie, user, MIN_RATING, MAX_RATING)
-
-    return prediction
+# def recommendations(user, data = None):
+#     # If user database isn't already loaded into memory,
+#     # load it now.
+#     if data == None:
+#         data = loadUserIndex()
+#
+#     start_time = time.time()
+#     model = MatrixPreferenceDataModel(data)
+#     print("--- {} seconds for model ---".format(time.time() - start_time))
+#
+#     start_time = time.time()
+#     similarity = UserSimilarity(model, pearson_correlation)
+#     print("--- {} seconds for similarity ---".format(time.time() - start_time))
+#
+#     start_time = time.time()
+#     recommender = UserBasedRecommender(model, similarity, with_preference=True)
+#     print("--- {} seconds for recommender ---".format(time.time() - start_time))
+#
+#     start_time = time.time()
+#     recs = recommender.recommend(user)
+#     print("--- {} seconds for recommendations ---".format(time.time() - start_time))
+#
+#     return recs
 
 
 
