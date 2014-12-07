@@ -247,20 +247,36 @@ def predictRating(user, movie, users = None, nearestNeighbors = None, movies = N
         else:
             neighbor = nearestNeighbors[neighbor][0]
 
+    # What to do when no known similar users have seen movie?
     if prediction == None:
+        # Fastest
+        # Just report the median rating
         # prediction = MAX_RATING / 2
 
 
+        # Most accurate, though also the slowest.
+        # Out of users who have seen movie, find the most similar to user
+        # neighbor = nearestNeighborFromSubsetTo(user, movies[movie], users)[1]
+        # prediction = users[neighbor][movie]
+
+
+        # Best option for its balance of speed and accuracy.
+        # Report the average of movie's ratings
         prediction = sum([float(movies[movie][user]) for user in movies[movie]])
         prediction = prediction / len(movies[movie])
 
 
-        # randomUser = randomlySimilarTo(user, 1, users)[0]
+        # Randomly find users and pick the most similar one
+        # randomUser = randomlySimilarTo(user, 5, users)[0]
         # while randomUser not in movies[movie]:
-        #     randomUser = randomlySimilarTo(user, 1, users)[0]
+        #     randomUser = randomlySimilarTo(user, 5, users)[0]
         #
         # prediction = users[randomUser][movie]
 
+
+        # Randomly pull find user and report their rating
+        # randomUser = random.choice(list(movies[movie].keys()))
+        # prediction = users[randomUser][movie]
 
     # endTimer(startTime, "to make prediction")
 
