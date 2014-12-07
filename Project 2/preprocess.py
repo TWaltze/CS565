@@ -24,7 +24,7 @@ def userRatings(input_file = "train.csv", output_file = "user-ratings.json"):
             ratings = clean.split(" ")
 
             # First word is always user
-            user = ratings.pop(0)
+            user = int(ratings.pop(0).replace("U", ""))
 
             movies = {}
             for rating in ratings:
@@ -34,8 +34,11 @@ def userRatings(input_file = "train.csv", output_file = "user-ratings.json"):
 
                 movie, score = stripped.split(",")
 
+                # Remove "M" indicator to just leave int id
+                movie = int(movie.replace("M", ""))
 
-                movies[movie] = score
+
+                movies[movie] = float(score)
 
             # Add to list of users
             processed[user] = movies
@@ -103,7 +106,7 @@ def movieRatings(input_file = "train.csv", output_file = "movie-ratings.json"):
             ratings = clean.split(" ")
 
             # First word is always user
-            user = ratings.pop(0)
+            user = int(ratings.pop(0).replace("U", ""))
 
             for rating in ratings:
                 # Remove ranking wrapper
@@ -112,9 +115,12 @@ def movieRatings(input_file = "train.csv", output_file = "movie-ratings.json"):
 
                 movie, score = stripped.split(",")
 
+                # Remove "M" indicator to just leave int id
+                movie = int(movie.replace("M", ""))
+
                 # Add the user's score to movie's total list of ratings
                 if movie in processed:
-                    processed[movie][user] = score
+                    processed[movie][user] = float(score)
                 else:
                     processed[movie] = {user: score}
 
