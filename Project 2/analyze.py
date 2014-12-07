@@ -93,6 +93,19 @@ def nearestNeighborTo(u1, users = None):
 
     return best
 
+def calculateNearestNeighbors(output_file = "nearestNeighbors.data"):
+    users = loadUserIndex()
+
+    nearest = [(user, nearestNeighborTo(user, users)) for user in users]
+
+    with open(output_file, "w") as output:
+        for pair in nearest:
+            user = pair[0]
+            neighbor = pair[1][1]
+            distance = pair[1][0]
+
+            output.write("{},{},{}\n".format(user, neighbor, distance))
+
 # def predict(movie, user, data = None):
 #     # If database isn't already loaded into memory,
 #     # load it now.
