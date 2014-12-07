@@ -6,6 +6,7 @@
 
 import json
 import time
+import random
 
 MAX_RATING = 15.0
 MIN_RATING = 1.0
@@ -99,7 +100,7 @@ def generatePredictions(users = None,
         # Generate rating predictions for each edge in test.csv
         for test in tests:
             # Console output to keep track of progress
-            if count % 5 == 0:
+            if count % 50000 == 0:
                 print("{}% finished.".format((count / numOfTests) * 100))
 
             user, movie = edges[test]
@@ -118,6 +119,8 @@ def compareUsers(u1, u2, users = None):
     user1Movies = users[u1]
     user2Movies = users[u2]
 
+    # startTime = startTimer()
+
     # Base measurement for how similar two users are.
     # The lower the number (0 to 1), the less similar.
     similarity = 1.0
@@ -131,6 +134,8 @@ def compareUsers(u1, u2, users = None):
     ])
 
     similarity -= difference
+
+    # endTimer(startTime, "to compare users")
 
     return similarity
 
@@ -154,11 +159,11 @@ def nearestNeighborTo(u1, users = None):
 def calculateNearestNeighbors(output_file = "nearestNeighbors.data"):
     users = loadUserIndex()
 
-    startTime = startTimer()
+    # startTime = startTimer()
 
     nearest = [(user, nearestNeighborTo(user, users)) for user in users]
 
-    endTimer(startTime, "to find nearest neighbors")
+    # endTimer(startTime, "to find nearest neighbors")
 
     with open(output_file, "w") as output:
         for pair in nearest:
@@ -190,7 +195,7 @@ def calculateNearestNeighborsFromMapping(output_file = "nearestNeighborsSubset.d
     movies = loadMovieIndex()
     edges = loadMapping()
 
-    startTime = startTimer()
+    # startTime = startTimer()
 
     nearest = {}
     for edge in edges:
@@ -207,7 +212,7 @@ def calculateNearestNeighborsFromMapping(output_file = "nearestNeighborsSubset.d
         else:
             nearest[movie] = data
 
-    endTimer(startTime, "to find nearest neighbors")
+    # endTimer(startTime, "to find nearest neighbors")
 
     # Encode as json for writing to new file
     encoded = json.dumps(nearest)
@@ -232,12 +237,6 @@ def predictRating(user, movie, users = None, nearestNeighbors = None, movies = N
 
     # startTime = startTimer()
 
-    # if movie in users[neighbor]:
-    #     prediction = users[neighbor][movie]
-    # else:
-    #     prediction = sum([float(movies[movie][user]) for user in movies[movie]])
-    #     prediction = prediction / len(movies[movie])
-
     prediction = None
     visited = []
     while (neighbor not in visited) and prediction == None:
@@ -249,12 +248,45 @@ def predictRating(user, movie, users = None, nearestNeighbors = None, movies = N
             neighbor = nearestNeighbors[neighbor][0]
 
     if prediction == None:
-        prediction = MAX_RATING / 2
+        # prediction = MAX_RATING / 2
+
+
+        prediction = sum([float(movies[movie][user]) for user in movies[movie]])
+        prediction = prediction / len(movies[movie])
+
+
+        # randomUser = randomlySimilarTo(user, 1, users)[0]
+        # while randomUser not in movies[movie]:
+        #     randomUser = randomlySimilarTo(user, 1, users)[0]
+        #
+        # prediction = users[randomUser][movie]
+
 
     # endTimer(startTime, "to make prediction")
 
     return prediction
 
+def randomlySimilarTo(u1, attempts, users = None):
+    if users == None:
+        users = loadUserIndex()
+
+    best = 0
+    similarity = 0
+
+    # startTime = startTimer()
+
+    for x in range(0, attempts):
+        randomUser = str(random.randrange(1, len(users) + 1))
+
+        compare = compareUsers(u1, randomUser, users)
+
+        if compare > similarity:
+            best = randomUser
+            similarity = compare
+
+    # endTimer(startTime, "to randomly find user")
+
+    return (best, similarity)
 
 
 # exec(open("analyze.py").read())
