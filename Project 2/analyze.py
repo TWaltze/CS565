@@ -7,8 +7,8 @@
 import json
 import time
 
-MAX_RATING = 15
-MIN_RATING = 1
+MAX_RATING = 15.0
+MIN_RATING = 1.0
 
 def startTimer():
     return time.time()
@@ -55,6 +55,58 @@ def loadMapping(input_file = "mapping.json"):
         endTimer(startTime, "to load mapping from json")
 
         return edges
+
+def loadTest(input_file = "test.json"):
+    startTime = startTimer()
+
+    with open(input_file, "r") as encoded:
+        edges = json.loads(encoded.read())
+
+        endTimer(startTime, "to load test from json")
+
+        return edges
+
+def generatePredictions(users = None,
+                        movies = None,
+                        nearestNeighbors = None,
+                        edges = None,
+                        tests = None,
+                        output_file = "prediction.csv"):
+
+    # If databases aren't already loaded into memory,
+    # load them now.
+    if users == None:
+        users = loadUserIndex()
+
+    if movies == None:
+        movies = loadMovieIndex()
+
+    if nearestNeighbors == None:
+        nearestNeighbors = loadNearestNeighbors()
+
+    if edges == None:
+        edges = loadMapping()
+
+    if tests == None:
+        tests = loadTest()
+
+    numOfTests = float(len(tests))
+    count = 1
+    with open(output_file, "w") as output:
+        # Generate csv headers
+        output.write("id,rating\n")
+
+        # Generate rating predictions for each edge in test.csv
+        for test in tests:
+            # Console output to keep track of progress
+            if count % 5 == 0:
+                print("{}% finished.".format((count / numOfTests) * 100))
+
+            user, movie = edges[test]
+            prediction = predictRating(user, movie, users, nearestNeighbors, movies)
+
+            output.write("{},{}\n".format(test, prediction))
+            count += 1
 
 def compareUsers(u1, u2, users = None):
     # If user database isn't already loaded into memory,
@@ -166,7 +218,7 @@ def calculateNearestNeighborsFromMapping(output_file = "nearestNeighborsSubset.d
 
 def predictRating(user, movie, users = None, nearestNeighbors = None, movies = None):
     # If databases aren't already loaded into memory,
-    # load it now.
+    # load them now.
     if users == None:
         users = loadUserIndex()
 
@@ -196,6 +248,8 @@ def predictRating(user, movie, users = None, nearestNeighbors = None, movies = N
         else:
             neighbor = nearestNeighbors[neighbor][0]
 
+    if prediction == None:
+        prediction = MAX_RATING / 2
 
     # endTimer(startTime, "to make prediction")
 
