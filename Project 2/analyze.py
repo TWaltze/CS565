@@ -17,8 +17,12 @@ def endTimer(start, task):
     print("--- {} seconds {} ---".format(time.time() - start, task))
 
 def loadMovieIndex(input_file = "movie-ratings.json"):
+    startTime = startTimer()
+
     with open(input_file, "r") as encoded:
         movies = json.loads(encoded.read())
+
+        endTimer(startTime, "to load movie index from json")
 
         return movies
 
@@ -28,13 +32,27 @@ def loadUserIndex(input_file = "user-ratings.json"):
     with open(input_file, "r") as encoded:
         users = json.loads(encoded.read())
 
-        endTimer(startTime, "to load from json")
+        endTimer(startTime, "to load user index from json")
+
+        return users
+
+def loadNearestNeighbors(input_file = "nearestNeighbors.json"):
+    startTime = startTimer()
+
+    with open(input_file, "r") as encoded:
+        users = json.loads(encoded.read())
+
+        endTimer(startTime, "to load nearest neighbors from json")
 
         return users
 
 def loadMapping(input_file = "mapping.json"):
+    startTime = startTimer()
+
     with open(input_file, "r") as encoded:
         edges = json.loads(encoded.read())
+
+        endTimer(startTime, "to load mapping from json")
 
         return edges
 
@@ -146,6 +164,42 @@ def calculateNearestNeighborsFromMapping(output_file = "nearestNeighborsSubset.d
     with open(output_file, "w") as output:
         output.write(encoded)
 
+def predictRating(user, movie, users = None, nearestNeighbors = None, movies = None):
+    # If databases aren't already loaded into memory,
+    # load it now.
+    if users == None:
+        users = loadUserIndex()
+
+    if nearestNeighbors == None:
+        nearestNeighbors = loadNearestNeighbors()
+
+    if movies == None:
+        movies = loadMovieIndex()
+
+    neighbor = nearestNeighbors[user][0]
+
+    # startTime = startTimer()
+
+    # if movie in users[neighbor]:
+    #     prediction = users[neighbor][movie]
+    # else:
+    #     prediction = sum([float(movies[movie][user]) for user in movies[movie]])
+    #     prediction = prediction / len(movies[movie])
+
+    prediction = None
+    visited = []
+    while (neighbor not in visited) and prediction == None:
+        visited.append(neighbor)
+
+        if movie in users[neighbor]:
+            prediction = users[neighbor][movie]
+        else:
+            neighbor = nearestNeighbors[neighbor][0]
+
+
+    # endTimer(startTime, "to make prediction")
+
+    return prediction
 
 
 

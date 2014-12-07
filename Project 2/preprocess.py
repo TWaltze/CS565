@@ -188,3 +188,28 @@ def test(input_file = "test.csv", output_file = "test.json"):
     # Write to new file
     with open(output_file, "w") as output:
         output.write(encoded)
+
+# Convert test to a more manageable data structure
+def nearest(input_file = "nearestNeighbors.data", output_file = "nearestNeighbors.json"):
+    processed = {}
+    with open(input_file, "r") as raw:
+        for line in raw:
+            # Break string into column data
+            data = line.split(",")
+
+            # First word is a user
+            user = data.pop(0)
+            # Second is that user's neighbor
+            neighbor = data.pop(0)
+            # Third is the similarity
+            similarity = float(data.pop(0))
+
+            # Add to list of edges.
+            processed[user] = [neighbor, similarity]
+
+    # Encode as json for writing to new file
+    encoded = json.dumps(processed)
+
+    # Write to new file
+    with open(output_file, "w") as output:
+        output.write(encoded)
