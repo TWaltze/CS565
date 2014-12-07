@@ -60,13 +60,6 @@ def compareUsers(u1, u2, users = None):
     user1Movies = users[u1]
     user2Movies = users[u2]
 
-    # print("movies seen by user1: {}".format(len(user1Movies)))
-    # print("movies seen by user2: {}".format(len(user2Movies)))
-
-    # Movies seen only by user1 or user2
-    seenByUser1 = {}
-    seenByUser2 = {}
-
     # Base measurement for how similar two users are.
     # The lower the number (0 to 1), the less similar.
     similarity = 1.0
@@ -74,28 +67,14 @@ def compareUsers(u1, u2, users = None):
     base = MAX_RATING * min(len(user1Movies), len(user2Movies))
     normalize = similarity / base
 
-    for movie in user1Movies:
-        user1Score = float(user1Movies[movie])
+    difference = sum([
+        abs(float(user1Movies[movie]) - float(user2Movies[movie])) * normalize
+        for movie in user1Movies if movie in user2Movies
+    ])
 
-        if movie in user2Movies:
-            user2Score = float(user2Movies[movie])
+    similarity -= difference
 
-            difference = abs(user1Score - user2Score)
-            similarity -= (difference * normalize)
-        else:
-            seenByUser1.update({movie: user1Score})
-
-    for movie in user2Movies:
-        user2Score = float(user2Movies[movie])
-
-        if movie not in user1Movies:
-            seenByUser2.update({movie: user2Score})
-
-    return {
-        "similarity": similarity,
-        "seenByUser1": len(seenByUser1),
-        "seenByUser2": len(seenByUser2)
-    }
+    return similarity
 
 def nearestNeighborTo(u1, users = None):
     # If user database isn't already loaded into memory,
@@ -105,15 +84,12 @@ def nearestNeighborTo(u1, users = None):
 
     startTime = startTimer()
 
-    best = ("U0", -1.0)
-    for user in users:
-        if user != u1:
-            results = compareUsers(u1, user, users)
+    best = max([
+        (compareUsers(u1, user, users), user)
+        for user in users if user != u1
+    ])
 
-            if results["similarity"] > best[1]:
-                best = (user, results["similarity"])
-
-    endTimer(startTime, "to find nearest neighbor")
+    endTimer(startTime, "to find nearest neighbor with list")
 
     return best
 
